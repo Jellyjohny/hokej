@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Generátor cvičení — pozemní hokej</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;color:#1a1a1a;background:#f8f8f8}
+button,select,input{font-family:inherit}
+
+/* ---------- horní lišta ---------- */
+.topbar{background:#1a472a;color:#fff;padding:10px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.topbar h1{margin:0;font-size:1.02em;font-weight:600;margin-right:auto}
+.topbar h1 small{opacity:.65;font-weight:400;font-size:.78em;margin-left:8px}
+.tb{padding:6px 12px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;border-radius:6px;cursor:pointer;font-size:.82em}
+.tb:hover{background:rgba(255,255,255,.2)}
+.tb.prim{background:#fff;color:#1a472a;font-weight:600;border-color:#fff}
+
+/* ---------- rozvržení ---------- */
+.wrap{display:flex;gap:16px;padding:16px;align-items:flex-start;max-width:1500px;margin:0 auto}
+.lib{width:250px;flex:0 0 250px;background:#fff;border:1px solid #e2e2e2;border-radius:8px;overflow:hidden;position:sticky;top:60px}
+.lib .st{background:#f4f4f4;padding:9px 14px;font-weight:600;font-size:.8em;color:#555;border-bottom:1px solid #e2e2e2}
+.lib .tools{padding:8px 10px;border-bottom:1px solid #f0f0f0;display:flex;gap:6px;flex-wrap:wrap}
+.lib input[type=search],.lib select{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:.8em}
+#libList{max-height:58vh;overflow:auto}
+.li{padding:8px 12px;border-bottom:1px solid #f2f2f2;cursor:pointer;font-size:.83em;display:flex;gap:6px;align-items:flex-start}
+.li:hover{background:#f5faf6}
+.li.act{background:#edf5ed;border-left:3px solid #1a472a;padding-left:9px}
+.li .nm{flex:1;line-height:1.3}
+.li .cat{display:block;font-size:.82em;color:#8a8a8a;margin-top:2px}
+.li .del{color:#c0392b;opacity:.35;font-size:1.05em;line-height:1}
+.li:hover .del{opacity:1}
+.empty{padding:16px 12px;color:#aaa;font-size:.82em;text-align:center}
+
+/* ---------- kartička ---------- */
+.card{flex:1;min-width:0;background:#fff;border:1px solid #e2e2e2;border-radius:10px;overflow:hidden}
+.chead{background:#1a472a;color:#fff;padding:14px 18px}
+.chead .nazev{font-size:1.25em;font-weight:600;outline:none;min-height:1.3em}
+.chead .nazev:empty:before{content:attr(ph);color:rgba(255,255,255,.45)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:3px 10px;font-size:.76em;display:flex;align-items:center;gap:5px}
+.chip b{font-weight:500;opacity:.62}
+.chip input,.chip select{background:transparent;border:none;color:#fff;font-size:1em;outline:none;padding:0;min-width:20px}
+.chip input::placeholder{color:rgba(255,255,255,.4)}
+.chip select option{color:#1a1a1a}
+.chip input.w1{width:34px}.chip input.w2{width:58px}.chip input.w3{width:110px}.chip input.w4{width:170px}
+
+.sec{border-top:1px solid #eee}
+.st{background:#f7f7f7;padding:7px 16px;font-weight:600;font-size:.78em;color:#666;letter-spacing:.02em}
+.body{padding:12px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr}
+.grid2>div{border-right:1px solid #eee}
+.grid2>div:last-child{border-right:none}
+[contenteditable]{outline:none;line-height:1.6;white-space:pre-wrap;font-size:.92em;min-height:52px}
+[contenteditable]:focus{background:#fbfffa;border-radius:3px}
+[contenteditable]:empty:before{content:attr(ph);color:#c3c3c3;font-size:.95em}
+
+/* ---------- editor hřiště ---------- */
+.fieldbox{padding:0 16px 14px;text-align:center}
+svg#pitch{max-width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.18);touch-action:none;cursor:crosshair;user-select:none}
+.toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:10px 16px 8px}
+.tbtn{padding:5px 10px;border:2px solid #dcdcdc;border-radius:18px;background:#fff;cursor:pointer;font-size:.78em;white-space:nowrap}
+.tbtn:hover{border-color:#aaa}
+.tbtn.on{border-color:#1a472a;background:#1a472a;color:#fff;font-weight:600}
+.sep{width:1px;height:24px;background:#e2e2e2;margin:0 3px}
+.cbtn{width:22px;height:22px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.cbtn.on{border-color:#333}
+.hint{font-size:.74em;color:#9a9a9a;padding:0 16px 8px;text-align:center}
+.phases{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:8px 16px;background:#f4f7f4;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8}
+.phases>b{font-size:.78em;color:#5b6b5e;font-weight:600;margin-right:2px}
+.phases .ph{min-width:32px;padding:5px 8px}
+.phases select{padding:4px 8px;border:1px solid #d5d5d5;border-radius:6px;font-size:.76em;background:#fff}
+.phases button[disabled]{opacity:.4;cursor:default}
+#gifProg{font-size:.75em;color:#1a472a;font-weight:600}
+.abtn{padding:4px 10px;border:1px solid #d5d5d5;border-radius:6px;background:#fff;cursor:pointer;font-size:.76em}
+.abtn:hover{background:#f2f2f2}
+.abtn.dan{color:#c0392b;border-color:#e3bcb6}
+
+/* ---------- tisk ---------- */
+@media print{
+  .noprint,.topbar,.lib,.toolbar,.hint{display:none!important}
+  body{background:#fff}
+  .wrap{padding:0;display:block;max-width:none}
+  .card{border:none;border-radius:0}
+  .chead{background:#1a472a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .chip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .st{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  svg#pitch{box-shadow:none;width:var(--printw,74%)!important;height:auto}
+  .fieldbox{padding:10px 16px}
+  [contenteditable]{min-height:0;font-size:.86em}
+  [contenteditable]:empty:before{content:""}
+  .sec,.grid2>div{break-inside:avoid}
+  .chip select{appearance:none;-webkit-appearance:none}
+  .chead{padding:10px 14px}
+  .chead .nazev{font-size:1.15em}
+  .st{padding:5px 14px;font-size:.72em}
+  .body{padding:8px 14px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🏑 Generátor cvičení <small>pozemní hokej</small></h1>
+  <button class="tb" id="btnNew">＋ Nové</button>
+  <button class="tb prim" id="btnSave">💾 Uložit</button>
+  <select class="tb" id="pageSize" title="Formát tisku">
+    <option value="A4">A4</option>
+    <option value="A5">A5</option>
+  </select>
+  <button class="tb" id="btnPrint">🖨 PDF / tisk</button>
+  <button class="tb" id="btnPng">🖼 PNG nákresu</button>
+  <button class="tb" id="btnExport">⬇ Export knihovny</button>
+  <button class="tb" id="btnImport">⬆ Import</button>
+  <input type="file" id="fileIn" accept=".json,application/json" style="display:none">
+</div>
+
+<div class="wrap">
+
+  <aside class="lib noprint">
+    <div class="st">📚 Knihovna cvičení</div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Hledat…">
+      <select id="fCat"><option value="">Všechny kategorie</option></select>
+    </div>
+    <div id="libList"></div>
+  </aside>
+
+  <main class="card" id="card">
+
+    <div class="chead">
+      <div class="nazev" contenteditable id="f_nazev" ph="Název cvičení…"></div>
+      <div class="chips">
+        <span class="chip"><b>Kategorie</b><select id="f_kat"></select></span>
+        <span class="chip"><b>Tým</b><input id="f_tym" class="w3" placeholder="U15"></span>
+        <span class="chip"><b>Hráčů</b><input id="f_hracu" class="w2" placeholder="12"></span>
+        <span class="chip"><b>Čas</b><input id="f_cas" class="w2" placeholder="15 min"></span>
+        <span class="chip"><b>Prostor</b><input id="f_prostor" class="w3" placeholder="23m území"></span>
+        <span class="chip"><b>Pomůcky</b><input id="f_pomucky" class="w4" placeholder="kužely, 6 míčů"></span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <select id="fieldSel" class="tbtn" style="border-radius:6px"></select>
+      <div class="sep"></div>
+      <button class="tbtn on" data-tool="select">✥ Posun</button>
+      <button class="tbtn" data-tool="player">⬤ Hráč</button>
+      <button class="tbtn" data-tool="ball">• Míč</button>
+      <button class="tbtn" data-tool="cone">▲ Kužel</button>
+      <button class="tbtn" data-tool="goal">⊓ Branka</button>
+      <button class="tbtn" data-tool="text">T Text</button>
+      <div class="sep"></div>
+      <button class="tbtn" data-tool="run">→ Běh</button>
+      <button class="tbtn" data-tool="dribble">∿ Vedení</button>
+      <button class="tbtn" data-tool="pass">⇢ Přihrávka</button>
+      <button class="tbtn" data-tool="shot">⇒ Střela</button>
+      <div class="sep"></div>
+      <button class="tbtn" data-tool="zone">▭ Zóna</button>
+      <button class="tbtn" data-tool="pen">✏️ Tužka</button>
+      <button class="tbtn" data-tool="eraser">◻ Guma</button>
+      <div class="sep"></div>
+      <button class="cbtn on" data-col="#f7e240" style="background:#f7e240"></button>
+      <button class="cbtn" data-col="#ffffff" style="background:#fff;box-shadow:0 0 0 1px #bbb"></button>
+      <button class="cbtn" data-col="#e74c3c" style="background:#e74c3c"></button>
+      <button class="cbtn" data-col="#2980b9" style="background:#2980b9"></button>
+      <button class="cbtn" data-col="#1a1a1a" style="background:#1a1a1a"></button>
+      <div class="sep"></div>
+      <button class="abtn" id="btnUndo">↩ Zpět</button>
+      <button class="abtn dan" id="btnClear">🗑 Smazat vše</button>
+    </div>
+
+    <div class="phases noprint">
+      <b>🎬 Fáze:</b>
+      <span id="phaseChips" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+      <button class="abtn" id="btnPhAdd" title="Zkopíruje aktuální fázi jako další">＋ fáze</button>
+      <button class="abtn dan" id="btnPhDel" title="Smaže aktuální fázi">🗑 fázi</button>
+      <div class="sep"></div>
+      <select id="speed" title="Doba přesunu mezi fázemi">
+        <option value="2200">pomalu</option>
+        <option value="1400" selected>normálně</option>
+        <option value="900">rychle</option>
+      </select>
+      <select id="gifW" title="Šířka GIFu">
+        <option value="480">480 px</option>
+        <option value="640" selected>640 px</option>
+        <option value="800">800 px</option>
+      </select>
+      <button class="abtn" id="btnPlay">▶ Přehrát</button>
+      <button class="abtn" id="btnGif">🎬 Stáhnout GIF</button>
+      <span id="gifProg"></span>
+    </div>
+
+    <div class="fieldbox"><svg id="pitch"></svg></div>
+    <div class="hint noprint">Objekty: klikni na hřiště · Šipky: klikej body trasy, ukonči dvojklikem nebo Enter · Posun: táhni objekt · Guma: klikni na objekt · Dvojklik na hráče = číslo
+      <details style="margin-top:6px"><summary style="cursor:pointer">Jak to funguje (klikni)</summary>
+      <div style="text-align:left;max-width:640px;margin:8px auto;line-height:1.7">
+        <b>1. Podklad</b> — vyber hřiště v rozbalovátku vlevo (venek celé/půlka/čtvrtina, hala, prázdná plocha, tělocvična).<br>
+        <b>2. Nákres</b> — vyber nástroj a klikej do hřiště. Barva mění barvu hráče / šipky / textu.
+        Šipky kresli klikáním bodů trasy (můžou být zalomené), ukonči dvojklikem nebo Enterem, zruš Escapem.
+        Nástrojem „Posun“ objekty přetahuješ, „Guma“ maže kliknutím. Zpět je Ctrl+Z.<br>
+        <b>3. Animace (GIF)</b> — nakresli výchozí postavení, dej „＋ fáze" (zkopíruje se) a v nové fázi jen posuň hráče a míč tam, kde mají skončit.
+        Takhle si naklikej klidně 4–5 fází. Mezi nimi se pohyb dopočítá sám. „▶ Přehrát" je náhled, „Stáhnout GIF" uloží animaci.
+        Šipka nakreslená jen v jedné fázi se v ní objeví a zase zmizí — hodí se ukázat záměr před přesunem.<br>
+        <b>4. Popis</b> — vyplň políčka pod nákresem. Ukládá se do prohlížeče (tlačítko Uložit), knihovna je vlevo.<br>
+        <b>5. Export</b> — „PDF / tisk” otevře tisk, v dialogu vyber „Uložit jako PDF” (formát A4/A5 přepneš nahoře).
+        „PNG nákresu” stáhne jen obrázek hřiště (aktuální fázi).<br>
+        <b>6. Sdílení</b> — pošli tenhle HTML soubor komukoliv, funguje offline bez instalace.
+        Svoje cvičení mu pošleš přes „Export knihovny“ (JSON) a on je načte přes „Import“.
+      </div></details>
+    </div>
+
+    <div class="sec"><div class="st">🎯 CÍL CVIČENÍ</div><div class="body"><div contenteditable id="f_cil" ph="Co tímhle chceme zlepšit…"></div></div></div>
+
+    <div class="sec grid2">
+      <div><div class="st">📐 ORGANIZACE</div><div class="body"><div contenteditable id="f_org" ph="Rozestavení, prostor, skupiny, pomůcky…"></div></div></div>
+      <div><div class="st">▶️ PRŮBĚH</div><div class="body"><div contenteditable id="f_prubeh" ph="Popis cvičení krok za krokem…"></div></div></div>
+    </div>
+
+    <div class="sec grid2">
+      <div><div class="st">🔑 KLÍČOVÉ BODY / NA CO DBÁT</div><div class="body"><div contenteditable id="f_klic" ph="Technika, timing, komunikace, chyby…"></div></div></div>
+      <div><div class="st">🔁 VARIACE / PROGRESE</div><div class="body"><div contenteditable id="f_var" ph="Ztížení, ulehčení, soutěž, bodování…"></div></div></div>
+    </div>
+
+  </main>
+</div>
+
+<style id="pagestyle">@page{size:A4 portrait;margin:10mm}</style>
+
+<script>
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const STORE = "hokej-cviceni-v2";
+
+/* =========================================================
+   KATEGORIE (use-case)
+   ========================================================= */
+const KATEGORIE = [
+  "Rozcvička / aktivace",
+  "Technika — vedení míče",
+  "Technika — přihrávka a zpracování",
+  "Zakončení / střelba",
+  "Herní situace 1v1 – 3v3",
+  "Útočná fáze / přechod",
+  "Obranná fáze / presink",
+  "Standardky — útočný trestný roh",
+  "Standardky — obranný trestný roh",
+  "Malé hry / zápasová cvičení",
+  "Brankář",
+  "Kondice / atletika",
+  "Hala — specifika"
+];
+
+/* =========================================================
+   PODKLADY HŘIŠŤ
+   ========================================================= */
+function goalD(cx, cy, r, hw, side){
+  // "D" (kruh) u branky; side = left|right|top|bottom
+  const n = v => Math.round(v*10)/10;
+  if(side==="left")   return `M ${n(cx)},${n(cy-hw-r)} A ${n(r)},${n(r)} 0 0 1 ${n(cx+r)},${n(cy-hw)} L ${n(cx+r)},${n(cy+hw)} A ${n(r)},${n(r)} 0 0 1 ${n(cx)},${n(cy+hw+r)}`;
+  if(side==="right")  return `M ${n(cx)},${n(cy-hw-r)} A ${n(r)},${n(r)} 0 0 0 ${n(cx-r)},${n(cy-hw)} L ${n(cx-r)},${n(cy+hw)} A ${n(r)},${n(r)} 0 0 0 ${n(cx)},${n(cy+hw+r)}`;
+  if(side==="top")    return `M ${n(cx-hw-r)},${n(cy)} A ${n(r)},${n(r)} 0 0 0 ${n(cx-hw)},${n(cy+r)} L ${n(cx+hw)},${n(cy+r)} A ${n(r)},${n(r)} 0 0 0 ${n(cx+hw+r)},${n(cy)}`;
+  return `M ${n(cx-hw-r)},${n(cy)} A ${n(r)},${n(r)} 0 0 1 ${n(cx-hw)},${n(cy-r)} L ${n(cx+hw)},${n(cy-r)} A ${n(r)},${n(r)} 0 0 1 ${n(cx+hw+r)},${n(cy)}`;
+}
+function goalBox(cx, cy, hw, d, side){
+  if(side==="left")  return `<rect x="${cx-d}" y="${cy-hw}" width="${d}" height="${hw*2}" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="3"/>`;
+  if(side==="right") return `<rect x="${cx}" y="${cy-hw}" width="${d}" height="${hw*2}" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="3"/>`;
+  if(side==="top")   return `<rect x="${cx-hw}" y="${cy-d}" width="${hw*2}" height="${d}" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="3"/>`;
+  return `<rect x="${cx-hw}" y="${cy}" width="${hw*2}" height="${d}" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="3"/>`;
+}
+
+const LINE = 'fill="none" stroke="#fff" stroke-width="3"';
+const GREEN = "#2f7d51", HALA = "#4a7fa8", WOOD = "#d9b98a", NEUTRAL = "#ececec";
+
+const FIELDS = {
+  "venek-cele": { label:"Venek — celé hřiště", w:91.4, h:55, bg:GREEN, draw(m,W,H){
+      const cy=H/2, hw=1.83*m, r=14.63*m, d=1.2*m;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#fff" stroke-width="4"/>
+      <line x1="${W/2}" y1="0" x2="${W/2}" y2="${H}" ${LINE}/>
+      <line x1="${22.9*m}" y1="0" x2="${22.9*m}" y2="${H}" ${LINE}/>
+      <line x1="${W-22.9*m}" y1="0" x2="${W-22.9*m}" y2="${H}" ${LINE}/>
+      <path d="${goalD(0,cy,r,hw,"left")}" ${LINE}/>
+      <path d="${goalD(W,cy,r,hw,"right")}" ${LINE}/>
+      <circle cx="${6.4*m}" cy="${cy}" r="3" fill="#fff"/>
+      <circle cx="${W-6.4*m}" cy="${cy}" r="3" fill="#fff"/>
+      ${goalBox(0,cy,hw,d,"left")}${goalBox(W,cy,hw,d,"right")}`;
+  }},
+  "venek-pulka": { label:"Venek — půlka (útočná)", w:55, h:45.7, bg:GREEN, draw(m,W,H){
+      const cx=W/2, hw=1.83*m, r=14.63*m, d=1.2*m;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#fff" stroke-width="4"/>
+      <line x1="0" y1="${22.9*m}" x2="${W}" y2="${22.9*m}" ${LINE}/>
+      <line x1="0" y1="${H}" x2="${W}" y2="${H}" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="14 10"/>
+      <path d="${goalD(cx,0,r,hw,"top")}" ${LINE}/>
+      <circle cx="${cx}" cy="${6.4*m}" r="3" fill="#fff"/>
+      ${goalBox(cx,0,hw,d,"top")}`;
+  }},
+  "venek-ctvrtina": { label:"Venek — čtvrtina (kruh)", w:45.7, h:27.5, bg:GREEN, draw(m,W,H){
+      const cx=W/2, hw=1.83*m, r=14.63*m, d=1.2*m;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="14 10"/>
+      <line x1="0" y1="0" x2="${W}" y2="0" ${LINE}/>
+      <path d="${goalD(cx,0,r,hw,"top")}" ${LINE}/>
+      <circle cx="${cx}" cy="${6.4*m}" r="3" fill="#fff"/>
+      ${goalBox(cx,0,hw,d,"top")}`;
+  }},
+  "hala-cele": { label:"Hala — celé hřiště", w:40, h:20, bg:HALA, draw(m,W,H){
+      const cy=H/2, hw=1.5*m, r=9*m, d=1*m;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#fff" stroke-width="4"/>
+      <line x1="0" y1="4" x2="${W}" y2="4" fill="none" stroke="#f0d36b" stroke-width="8"/>
+      <line x1="0" y1="${H-4}" x2="${W}" y2="${H-4}" fill="none" stroke="#f0d36b" stroke-width="8"/>
+      <line x1="${W/2}" y1="0" x2="${W/2}" y2="${H}" ${LINE}/>
+      <path d="${goalD(0,cy,r,hw,"left")}" ${LINE}/>
+      <path d="${goalD(W,cy,r,hw,"right")}" ${LINE}/>
+      ${goalBox(0,cy,hw,d,"left")}${goalBox(W,cy,hw,d,"right")}`;
+  }},
+  "hala-pulka": { label:"Hala — půlka", w:20, h:20, bg:HALA, draw(m,W,H){
+      const cy=H/2, hw=1.5*m, r=9*m, d=1*m;
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#fff" stroke-width="4"/>
+      <line x1="0" y1="5" x2="${W}" y2="5" fill="none" stroke="#f0d36b" stroke-width="10"/>
+      <line x1="0" y1="${H-5}" x2="${W}" y2="${H-5}" fill="none" stroke="#f0d36b" stroke-width="10"/>
+      <line x1="${W}" y1="0" x2="${W}" y2="${H}" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="14 10"/>
+      <path d="${goalD(0,cy,r,hw,"left")}" ${LINE}/>
+      ${goalBox(0,cy,hw,d,"left")}`;
+  }},
+  "prazdna": { label:"Prázdná plocha (grid)", w:40, h:25, bg:NEUTRAL, draw(m,W,H){
+      let g="";
+      for(let x=m*5;x<W;x+=m*5) g+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#d3d3d3" stroke-width="1.5"/>`;
+      for(let y=m*5;y<H;y+=m*5) g+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#d3d3d3" stroke-width="1.5"/>`;
+      return g+`<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="12 8"/>`;
+  }},
+  "telocvicna": { label:"Tělocvična", w:28, h:15, bg:WOOD, draw(m,W,H){
+      return `<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#8a6a45" stroke-width="4"/>
+      <line x1="${W/2}" y1="0" x2="${W/2}" y2="${H}" fill="none" stroke="#8a6a45" stroke-width="3"/>
+      <circle cx="${W/2}" cy="${H/2}" r="${1.8*m}" fill="none" stroke="#8a6a45" stroke-width="3"/>`;
+  }}
+};
+
+/* =========================================================
+   STAV
+   ========================================================= */
+let frames = [[]];      // fáze animace; každá fáze = pole objektů
+let cur = 0;            // aktivní fáze
+let objs = frames[0];   // === frames[cur], mutuje se in-place
+let hist = [];          // undo
+let tool = "select";
+let color = "#f7e240";
+let field = "venek-pulka";
+let curId = null;       // id načteného cvičení z knihovny
+let pending = null;     // rozpracovaná šipka
+let drag = null, penPts = null, zoneStart = null;
+
+const svg = document.getElementById("pitch");
+const $ = id => document.getElementById(id);
+const FLD = ["f_nazev","f_kat","f_tym","f_hracu","f_cas","f_prostor","f_pomucky","f_cil","f_org","f_prubeh","f_klic","f_var"];
+
+function dims(){
+  const f = FIELDS[field], W = 1000, m = W/f.w, H = f.h*m;
+  return {f,W,H,m};
+}
+function snap(){ hist.push(JSON.stringify({f:frames,c:cur})); if(hist.length>50) hist.shift(); }
+function cp(x){ return JSON.parse(JSON.stringify(x)); }
+
+/* --- identita objektů napříč fázemi --- */
+let uidN = 0;
+function uid(){ return "o"+Date.now().toString(36)+(uidN++).toString(36); }
+function ensureIds(){ frames.forEach(fr=>fr.forEach(o=>{ if(!o.id) o.id = uid(); })); }
+function addObj(o){
+  o.id = uid();
+  for(let i=cur;i<frames.length;i++) frames[i].push(cp(o));
+}
+function delAt(i){
+  const id = objs[i].id;
+  for(let k=cur;k<frames.length;k++){ const j = frames[k].findIndex(o=>o.id===id); if(j>=0) frames[k].splice(j,1); }
+}
+function setLabel(i,v){
+  const id = objs[i].id;
+  frames.forEach(fr=>{ const o = fr.find(x=>x.id===id); if(o) o.n = v; });
+}
+function setPhase(i){
+  cur = Math.max(0, Math.min(i, frames.length-1));
+  objs = frames[cur];
+  render(); renderPhases();
+}
+
+/* =========================================================
+   VYKRESLENÍ
+   ========================================================= */
+function polyPath(pts){
+  return pts.map((p,i)=>(i?"L":"M")+r1(p.x)+","+r1(p.y)).join(" ");
+}
+function r1(v){ return Math.round(v*10)/10; }
+function wavyPath(pts, amp, per){
+  // vlnovka podél lomené čáry (vedení míče)
+  const seg=[]; let total=0;
+  for(let i=1;i<pts.length;i++){
+    const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y, L=Math.hypot(dx,dy);
+    seg.push({a:pts[i-1],dx:dx/(L||1),dy:dy/(L||1),L,s:total}); total+=L;
+  }
+  if(!total) return polyPath(pts);
+  const out=[]; const step=3;
+  for(let s=0;s<=total;s+=step){
+    let g=seg[seg.length-1];
+    for(const x of seg){ if(s<=x.s+x.L){ g=x; break; } }
+    const t=s-g.s;
+    const px=g.a.x+g.dx*t, py=g.a.y+g.dy*t;
+    const off=Math.sin(s/per*Math.PI*2)*amp;
+    out.push({x:px-g.dy*off, y:py+g.dx*off});
+  }
+  const tail = 14; // poslední kousek rovně kvůli šipce
+  return polyPath(out.slice(0, Math.max(2, out.length-Math.round(tail/step)))) + " L "+r1(pts[pts.length-1].x)+","+r1(pts[pts.length-1].y);
+}
+function isLight(hex){
+  const c=hex.replace("#",""); const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+  return (r*299+g*587+b*114)/1000 > 150;
+}
+
+function drawObj(o, i){
+  const op = (o._op!=null) ? o._op : ((drag && drag.i===i) ? 0.85 : null);
+  const sel = op!=null ? ` opacity="${Math.max(0,Math.min(1,op))}"` : "";
+  const g = v => `<g class="ob" data-i="${i}"${sel}>`;
+  switch(o.t){
+    case "player":{
+      const tc = isLight(o.c)?"#1a1a1a":"#fff";
+      return g()+`<circle cx="${o.x}" cy="${o.y}" r="20" fill="${o.c}" stroke="#1a1a1a" stroke-width="2.5"/>
+        <text x="${o.x}" y="${o.y+7}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" font-weight="700" fill="${tc}">${esc(o.n||"")}</text></g>`;
+    }
+    case "ball":
+      return g()+`<circle cx="${o.x}" cy="${o.y}" r="8" fill="#fff" stroke="#1a1a1a" stroke-width="2.5"/></g>`;
+    case "cone":
+      return g()+`<polygon points="${o.x},${o.y-19} ${o.x-15},${o.y+12} ${o.x+15},${o.y+12}" fill="${o.c}" stroke="#1a1a1a" stroke-width="2"/></g>`;
+    case "goal":
+      return g()+`<rect x="${o.x-38}" y="${o.y-8}" width="76" height="16" fill="rgba(255,255,255,.65)" stroke="#1a1a1a" stroke-width="3"/></g>`;
+    case "text":
+      return g()+`<text x="${o.x}" y="${o.y}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="26" font-weight="600" fill="${o.c}" stroke="rgba(0,0,0,.45)" stroke-width="4" paint-order="stroke">${esc(o.n||"")}</text></g>`;
+    case "zone":
+      return g()+`<rect x="${Math.min(o.x,o.x2)}" y="${Math.min(o.y,o.y2)}" width="${Math.abs(o.x2-o.x)}" height="${Math.abs(o.y2-o.y)}" fill="${o.c}" fill-opacity="0.16" stroke="${o.c}" stroke-width="3" stroke-dasharray="10 7"/></g>`;
+    case "pen":
+      return g()+`<path d="${polyPath(o.pts)}" fill="none" stroke="${o.c}" stroke-width="${o.w||4}" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    case "run": case "pass": case "shot": case "dribble":{
+      const dash = o.t==="pass" ? ' stroke-dasharray="16 11"' : "";
+      const w = o.t==="shot" ? 8 : 4.5;
+      const d = o.t==="dribble" ? wavyPath(o.pts, 7, 26) : polyPath(o.pts);
+      return g()+`<path d="${d}" fill="none" stroke="${o.c}" stroke-width="${w}"${dash} stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ar-${o.c.replace("#","")})"/></g>`;
+    }
+  }
+  return "";
+}
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function render(list){
+  const L = list || objs;
+  const {f,W,H,m} = dims();
+  const P = 20;
+  svg.setAttribute("viewBox", `${-P} ${-P} ${W+P*2} ${H+P*2}`);
+  svg.setAttribute("width", W+P*2);
+  svg.setAttribute("height", H+P*2);
+  const asp = (H+P*2)/(W+P*2);
+  svg.style.width = Math.round(Math.min(900, 600/asp))+"px";
+  svg.style.height = "auto";
+
+  const cols = [...new Set(L.filter(o=>o.c).map(o=>o.c).concat(["#f7e240","#ffffff","#e74c3c","#2980b9","#1a1a1a","#e87d1e","#333333",color]))];
+  const defs = cols.map(c=>`<marker id="ar-${c.replace("#","")}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="${c}"/></marker>`).join("");
+
+  let prev = "";
+  if(pending && pending.pts.length){
+    prev = `<path d="${polyPath(pending.pts.concat(pending.cur?[pending.cur]:[]))}" fill="none" stroke="${color}" stroke-width="4" stroke-dasharray="6 6" opacity=".8"/>`;
+  }
+  if(zoneStart && zoneStart.cur){
+    prev += `<rect x="${Math.min(zoneStart.x,zoneStart.cur.x)}" y="${Math.min(zoneStart.y,zoneStart.cur.y)}" width="${Math.abs(zoneStart.cur.x-zoneStart.x)}" height="${Math.abs(zoneStart.cur.y-zoneStart.y)}" fill="${color}" fill-opacity=".12" stroke="${color}" stroke-width="3" stroke-dasharray="8 6"/>`;
+  }
+
+  svg.innerHTML = `<defs>${defs}</defs>
+    <rect x="${-P}" y="${-P}" width="${W+P*2}" height="${H+P*2}" fill="${f.bg}"/>
+    <g pointer-events="none">${f.draw(m,W,H)}</g>
+    ${L.map(drawObj).join("")}
+    <g pointer-events="none">${prev}</g>`;
+}
+
+/* =========================================================
+   INTERAKCE
+   ========================================================= */
+function pt(e){
+  const r = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  return { x: vb.x + (e.clientX-r.left)/r.width*vb.width, y: vb.y + (e.clientY-r.top)/r.height*vb.height };
+}
+function hitIndex(e){
+  const g = e.target.closest ? e.target.closest("g.ob") : null;
+  return g ? +g.dataset.i : -1;
+}
+
+svg.addEventListener("pointerdown", e=>{
+  e.preventDefault();
+  const p = pt(e), i = hitIndex(e);
+
+  if(tool==="eraser"){ if(i>=0){ snap(); delAt(i); render(); } return; }
+
+  if(tool==="select"){
+    if(i>=0){ snap(); drag = {i, p, orig: JSON.parse(JSON.stringify(objs[i]))}; svg.setPointerCapture(e.pointerId); }
+    return;
+  }
+  if(tool==="pen"){ snap(); penPts=[p]; svg.setPointerCapture(e.pointerId); return; }
+  if(tool==="zone"){ zoneStart={x:p.x,y:p.y,cur:p}; svg.setPointerCapture(e.pointerId); return; }
+
+  if(["run","pass","shot","dribble"].includes(tool)){
+    if(!pending) pending = {t:tool, c:color, pts:[]};
+    pending.pts.push(p); pending.cur = p; render(); return;
+  }
+
+  snap();
+  if(tool==="player"){
+    const n = objs.filter(o=>o.t==="player").length+1;
+    addObj({t:"player", x:p.x, y:p.y, c:color, n:String(n)});
+  } else if(tool==="ball"){ addObj({t:"ball", x:p.x, y:p.y});
+  } else if(tool==="cone"){ addObj({t:"cone", x:p.x, y:p.y, c:color==="#ffffff"?"#e87d1e":color});
+  } else if(tool==="goal"){ addObj({t:"goal", x:p.x, y:p.y});
+  } else if(tool==="text"){
+    const s = prompt("Text:"); if(!s){ hist.pop(); return; }
+    addObj({t:"text", x:p.x, y:p.y, c:color, n:s});
+  }
+  render();
+});
+
+svg.addEventListener("pointermove", e=>{
+  const p = pt(e);
+  if(drag){
+    const o = objs[drag.i], dx = p.x-drag.p.x, dy = p.y-drag.p.y, or = drag.orig;
+    if(or.pts) o.pts = or.pts.map(q=>({x:q.x+dx, y:q.y+dy}));
+    else { o.x = or.x+dx; o.y = or.y+dy; if(or.x2!=null){ o.x2=or.x2+dx; o.y2=or.y2+dy; } }
+    render(); return;
+  }
+  if(penPts){
+    penPts.push(p);
+    let pv = document.getElementById("penprev");
+    if(!pv){
+      pv = document.createElementNS(NS,"path");
+      pv.id = "penprev"; pv.setAttribute("fill","none"); pv.setAttribute("stroke-width","4");
+      pv.setAttribute("stroke-linecap","round"); pv.setAttribute("pointer-events","none");
+      svg.appendChild(pv);
+    }
+    pv.setAttribute("stroke", color);
+    pv.setAttribute("d", polyPath(penPts));
+    return; }
+  if(zoneStart){ zoneStart.cur=p; render(); return; }
+  if(pending && pending.pts.length){ pending.cur=p; render(); }
+});
+
+svg.addEventListener("pointerup", e=>{
+  if(drag){ drag=null; render(); return; }
+  if(penPts){
+    const pv = document.getElementById("penprev"); if(pv) pv.remove();
+    if(penPts.length>2) addObj({t:"pen", c:color, w:4, pts:penPts}); else hist.pop();
+    penPts=null; render(); return; }
+  if(zoneStart){
+    const p = zoneStart.cur;
+    if(p && Math.abs(p.x-zoneStart.x)>15 && Math.abs(p.y-zoneStart.y)>15){ snap(); addObj({t:"zone", x:zoneStart.x, y:zoneStart.y, x2:p.x, y2:p.y, c:color}); }
+    zoneStart=null; render();
+  }
+});
+
+svg.addEventListener("dblclick", e=>{
+  const i = hitIndex(e);
+  if(pending){ finishArrow(); return; }
+  if(i>=0 && (objs[i].t==="player" || objs[i].t==="text")){
+    const s = prompt(objs[i].t==="player"?"Číslo / označení hráče:":"Text:", objs[i].n||"");
+    if(s!==null){ snap(); setLabel(i,s); render(); }
+  }
+});
+
+function finishArrow(){
+  if(pending && pending.pts.length>=2){ snap(); addObj({t:pending.t, c:pending.c, pts:pending.pts}); }
+  pending=null; render();
+}
+
+document.addEventListener("keydown", e=>{
+  const inField = /INPUT|SELECT/.test(e.target.tagName) || e.target.isContentEditable;
+  if(e.key==="Enter" && pending && !inField){ e.preventDefault(); finishArrow(); }
+  if(e.key==="Escape"){ pending=null; render(); }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="z" && !inField){ e.preventDefault(); undo(); }
+});
+
+function undo(){
+  if(!hist.length) return;
+  const s = JSON.parse(hist.pop());
+  frames = s.f; cur = Math.min(s.c, frames.length-1); objs = frames[cur];
+  render(); renderPhases();
+}
+$("btnUndo").onclick = undo;
+$("btnClear").onclick = ()=>{
+  if(objs.length && confirm("Smazat celý nákres (všechny fáze)?")){ snap(); frames = [[]]; cur = 0; objs = frames[0]; render(); renderPhases(); }
+};
+
+/* =========================================================
+   FÁZE ANIMACE
+   ========================================================= */
+function renderPhases(){
+  const el = $("phaseChips");
+  el.innerHTML = frames.map((f,i)=>`<button class="tbtn ph${i===cur?" on":""}" data-ph="${i}">${i+1}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=> b.onclick = ()=> setPhase(+b.dataset.ph));
+  $("btnPhDel").disabled = frames.length<2;
+  $("btnPlay").disabled = $("btnGif").disabled = frames.length<2;
+}
+$("btnPhAdd").onclick = ()=>{
+  snap();
+  frames.splice(cur+1, 0, cp(frames[cur]));
+  setPhase(cur+1);
+};
+$("btnPhDel").onclick = ()=>{
+  if(frames.length<2) return;
+  if(!confirm("Smazat fázi "+(cur+1)+"?")) return;
+  snap(); frames.splice(cur,1); setPhase(Math.min(cur, frames.length-1));
+};
+
+function easeIO(t){ return t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+function lerpObj(a,b,t){
+  const o = cp(a), L = (p,q)=> p+(q-p)*t;
+  if(a.pts && b.pts){
+    o.pts = (a.pts.length===b.pts.length) ? a.pts.map((p,i)=>({x:L(p.x,b.pts[i].x), y:L(p.y,b.pts[i].y)})) : (t<.5?a.pts:b.pts);
+  }
+  if(a.x!=null && b.x!=null){ o.x=L(a.x,b.x); o.y=L(a.y,b.y); }
+  if(a.x2!=null && b.x2!=null){ o.x2=L(a.x2,b.x2); o.y2=L(a.y2,b.y2); }
+  return o;
+}
+function interp(A,B,t){
+  const out=[], bm=new Map(B.map(o=>[o.id,o])), am=new Map(A.map(o=>[o.id,o]));
+  A.forEach(o=>{
+    const q = bm.get(o.id);
+    if(q) out.push(lerpObj(o,q,t));
+    else { const c = cp(o); c._op = Math.max(0, 1-t*1.7); if(c._op>0.02) out.push(c); }
+  });
+  B.forEach(o=>{
+    if(!am.has(o.id)){ const c = cp(o); c._op = Math.max(0,(t-0.35)/0.65); if(c._op>0.02) out.push(c); }
+  });
+  return out;
+}
+function timeline(){
+  const dur = +$("speed").value, step = 80, seq = [];
+  for(let i=0;i<frames.length;i++){
+    seq.push({list:frames[i], ms:550});
+    if(i<frames.length-1){
+      const n = Math.max(5, Math.round(dur/step));
+      for(let s=1;s<n;s++) seq.push({list:interp(frames[i],frames[i+1],easeIO(s/n)), ms:step});
+    }
+  }
+  seq[seq.length-1].ms = 1000;
+  return seq;
+}
+let playing = false;
+async function play(){
+  if(frames.length<2) return;
+  playing = true; $("btnPlay").textContent = "⏹ Stop";
+  const seq = timeline();
+  for(const f of seq){
+    if(!playing) break;
+    render(f.list);
+    await new Promise(r=>setTimeout(r, f.ms));
+  }
+  playing = false; $("btnPlay").textContent = "▶ Přehrát"; render();
+}
+$("btnPlay").onclick = ()=>{ if(playing){ playing=false; return; } play(); };
+
+document.querySelectorAll(".tbtn[data-tool]").forEach(b=>{
+  b.onclick = ()=>{
+    if(pending) finishArrow();
+    document.querySelectorAll(".tbtn[data-tool]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); tool = b.dataset.tool;
+    svg.style.cursor = tool==="select" ? "move" : (tool==="eraser" ? "not-allowed" : "crosshair");
+  };
+});
+document.querySelectorAll(".cbtn").forEach(b=>{
+  b.onclick = ()=>{ document.querySelectorAll(".cbtn").forEach(x=>x.classList.remove("on")); b.classList.add("on"); color = b.dataset.col; };
+});
+
+/* =========================================================
+   FORMULÁŘ / KNIHOVNA
+   ========================================================= */
+const fsel = $("fieldSel");
+Object.entries(FIELDS).forEach(([k,v])=> fsel.add(new Option(v.label, k)));
+fsel.value = field;
+fsel.onchange = ()=>{ field = fsel.value; render(); };
+
+const ksel = $("f_kat");
+KATEGORIE.forEach(k=> ksel.add(new Option(k,k)));
+const fcat = $("fCat");
+KATEGORIE.forEach(k=> fcat.add(new Option(k,k)));
+
+function getVal(id){
+  const el=$(id);
+  if(!el.hasAttribute("contenteditable")) return el.value;
+  const t = (el.innerText != null) ? el.innerText : el.textContent;
+  return String(t||"").replace(/ /g," ").trim();
+}
+function setVal(id,v){ const el=$(id); if(el.hasAttribute("contenteditable")) el.textContent = v||""; else el.value = v||""; }
+
+function current(){
+  const o = {id: curId || ("c"+Date.now()), field, frames, ts: Date.now()};
+  FLD.forEach(f=> o[f]=getVal(f));
+  return o;
+}
+function load(o){
+  playing = false;
+  curId = o.id;
+  field = o.field in FIELDS ? o.field : "venek-pulka";
+  fsel.value = field;
+  frames = cp(o.frames && o.frames.length ? o.frames : [o.objs || []]);
+  cur = 0; objs = frames[0]; ensureIds();
+  hist = [];
+  FLD.forEach(f=> setVal(f, o[f]));
+  render(); renderPhases(); renderLib();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function blank(){
+  playing = false;
+  curId = null; frames = [[]]; cur = 0; objs = frames[0]; hist = []; field = fsel.value;
+  FLD.forEach(f=> setVal(f, ""));
+  $("f_kat").value = KATEGORIE[4];
+  render(); renderPhases(); renderLib();
+}
+
+let mem = null; // záloha, když prohlížeč nepustí localStorage (např. Safari přes file://)
+function LS(){ try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); return localStorage; }catch(e){ return null; } }
+function db(){
+  try{ const s = LS(); return JSON.parse((s ? s.getItem(STORE) : mem) || "[]"); }catch(e){ return []; }
+}
+function saveDb(a){
+  const j = JSON.stringify(a); mem = j;
+  try{ const s = LS(); if(s) s.setItem(STORE, j); }catch(e){
+    alert("Prohlížeč nepustil uložení do paměti. Cvičení si ulož přes „Export knihovny“.");
+  }
+}
+
+$("btnSave").onclick = ()=>{
+  const c = current();
+  if(!c.f_nazev){ alert("Doplň název cvičení."); $("f_nazev").focus(); return; }
+  const a = db(); const i = a.findIndex(x=>x.id===c.id);
+  if(i>=0) a[i]=c; else a.push(c);
+  saveDb(a); curId = c.id; renderLib();
+  const b=$("btnSave"); const t=b.textContent; b.textContent="✓ Uloženo"; setTimeout(()=>b.textContent=t, 1200);
+};
+$("btnNew").onclick = ()=>{ if(confirm("Založit nové cvičení? Neuložené změny zmizí.")) blank(); };
+
+function renderLib(){
+  const q = $("q").value.toLowerCase(), cat = fcat.value;
+  const list = db().filter(x=>{
+    if(cat && x.f_kat!==cat) return false;
+    if(!q) return true;
+    return (x.f_nazev+" "+x.f_kat+" "+x.f_cil+" "+x.f_prubeh).toLowerCase().includes(q);
+  }).sort((a,b)=>a.f_nazev.localeCompare(b.f_nazev,"cs"));
+  const el = $("libList");
+  if(!list.length){ el.innerHTML = '<div class="empty">Zatím nic uloženého.<br>Vyplň kartičku a dej Uložit.</div>'; return; }
+  el.innerHTML = list.map(x=>`<div class="li${x.id===curId?" act":""}" data-id="${x.id}">
+      <span class="nm">${(x.frames&&x.frames.length>1)?"🎬 ":""}${esc(x.f_nazev)}<span class="cat">${esc(x.f_kat||"")}</span></span>
+      <span class="del" data-del="${x.id}" title="Smazat">✕</span></div>`).join("");
+  el.querySelectorAll(".li").forEach(d=>{
+    d.onclick = ev=>{
+      if(ev.target.dataset.del){
+        if(confirm("Smazat cvičení z knihovny?")){ saveDb(db().filter(y=>y.id!==ev.target.dataset.del)); if(curId===ev.target.dataset.del) curId=null; renderLib(); }
+        return;
+      }
+      const o = db().find(y=>y.id===d.dataset.id); if(o) load(o);
+    };
+  });
+}
+$("q").oninput = renderLib;
+fcat.onchange = renderLib;
+
+/* =========================================================
+   EXPORT
+   ========================================================= */
+$("pageSize").onchange = ()=>{
+  const s = $("pageSize").value;
+  $("pagestyle").textContent = `@page{size:${s} portrait;margin:${s==="A5"?"8mm":"10mm"}}`;
+  document.body.style.setProperty("--printw", s==="A5"?"92%":"74%");
+};
+$("btnPrint").onclick = ()=>{ if(pending) finishArrow(); window.print(); };
+
+$("btnPng").onclick = async ()=>{
+  try{
+    const w = +svg.getAttribute("width"), h = +svg.getAttribute("height"), s = 2;
+    const img = await loadImg(svgUrl(w*s, h*s));
+    const cv = document.createElement("canvas");
+    cv.width = w*s; cv.height = h*s;
+    const cx = cv.getContext("2d");
+    cx.fillStyle = "#fff"; cx.fillRect(0,0,cv.width,cv.height);
+    cx.drawImage(img,0,0,cv.width,cv.height);
+    const a = document.createElement("a");
+    a.download = fileName(frames.length>1 ? ("-faze"+(cur+1)+".png") : ".png");
+    a.href = cv.toDataURL("image/png"); a.click();
+  }catch(e){ alert("Export PNG se nepovedl. Zkus prohlížeč Chrome nebo použij tisk do PDF."); }
+};
+
+/* =========================================================
+   GIF — vlastní enkodér (aby soubor fungoval offline bez knihoven)
+   ========================================================= */
+function Bytes(){
+  let buf = new Uint8Array(1<<16), n = 0;
+  const grow = k => { if(n+k <= buf.length) return; let s = buf.length; while(s < n+k) s *= 2; const b = new Uint8Array(s); b.set(buf); buf = b; };
+  return {
+    b(v){ grow(1); buf[n++] = v & 255; },
+    w(v){ grow(2); buf[n++] = v & 255; buf[n++] = (v>>8) & 255; },
+    s(str){ grow(str.length); for(let i=0;i<str.length;i++) buf[n++] = str.charCodeAt(i); },
+    arr(a){ grow(a.length); for(let i=0;i<a.length;i++) buf[n++] = a[i]; },
+    at(i,v){ buf[i] = v & 255; },
+    get len(){ return n; },
+    out(){ return buf.slice(0,n); }
+  };
+}
+
+function lzw(minCode, px){
+  const clear = 1<<minCode, eoi = clear+1;
+  let codeSize = minCode+1, next = eoi+1, dict = new Map();
+  const out = []; let acc = 0, bits = 0;
+  const emit = c => { acc |= c<<bits; bits += codeSize; while(bits>=8){ out.push(acc & 255); acc >>>= 8; bits -= 8; } };
+  emit(clear);
+  let prefix = px[0];
+  for(let i=1;i<px.length;i++){
+    const k = px[i], key = prefix*256 + k, f = dict.get(key);
+    if(f !== undefined){ prefix = f; continue; }
+    emit(prefix);
+    if(next === 4096){ emit(clear); dict = new Map(); next = eoi+1; codeSize = minCode+1; }
+    else { dict.set(key, next); if(next === (1<<codeSize) && codeSize < 12) codeSize++; next++; }
+    prefix = k;
+  }
+  emit(prefix); emit(eoi);
+  if(bits>0) out.push(acc & 255);
+  return out;
+}
+
+// RGBA z canvasu → klíče RGB555 (šetří paměť i čas)
+function toKeys(data, n){
+  const k = new Uint16Array(n);
+  for(let i=0,p=0;i<n;i++,p+=4) k[i] = ((data[p]>>3)<<10) | ((data[p+1]>>3)<<5) | (data[p+2]>>3);
+  return k;
+}
+function buildGif(keyed, w, h, delaysMs){
+  // 1) histogram barev přes všechny snímky
+  const cnt = new Uint32Array(32768);
+  for(const k of keyed) for(let i=0;i<k.length;i++) cnt[k[i]]++;
+  const used = [];
+  for(let c=0;c<32768;c++) if(cnt[c]) used.push(c);
+  // 2) paleta = 256 nejčastějších barev, zbytek se mapuje na nejbližší
+  let pal = used.sort((a,b)=>cnt[b]-cnt[a]).slice(0,256);
+  if(!pal.length) pal = [32767];
+  const lut = new Uint8Array(32768), known = new Uint8Array(32768);
+  pal.forEach((c,i)=>{ lut[c]=i; known[c]=1; });
+  const near = c => {
+    if(known[c]) return lut[c];
+    const r=(c>>10)&31, g=(c>>5)&31, b=c&31; let bi=0, bd=1e9;
+    for(let i=0;i<pal.length;i++){
+      const p = pal[i], dr=((p>>10)&31)-r, dg=((p>>5)&31)-g, db=(p&31)-b, dd=dr*dr+dg*dg+db*db;
+      if(dd<bd){ bd=dd; bi=i; if(!dd) break; }
+    }
+    lut[c]=bi; known[c]=1; return bi;
+  };
+  const idx = keyed.map(k=>{ const a = new Uint8Array(k.length); for(let i=0;i<k.length;i++) a[i] = near(k[i]); return a; });
+
+  // 3) skládání GIFu
+  let bits = 1; while((1<<bits) < pal.length) bits++;
+  const G = Bytes();
+  const ch = v => (v<<3) | 4;
+  G.s("GIF89a"); G.w(w); G.w(h);
+  G.b(0x80 | ((bits-1)&7)); G.b(0); G.b(0);
+  for(let i=0;i<(1<<bits);i++){ const c = pal[i]||0; G.b(ch((c>>10)&31)); G.b(ch((c>>5)&31)); G.b(ch(c&31)); }
+  G.b(0x21); G.b(0xFF); G.b(11); G.s("NETSCAPE2.0"); G.b(3); G.b(1); G.w(0); G.b(0);
+
+  let prev = null, lastDelayPos = -1, lastCs = 0;
+  for(let f=0; f<idx.length; f++){
+    const cs = Math.max(2, Math.round(delaysMs[f]/10));
+    let x0=0, y0=0, x1=w-1, y1=h-1;
+    if(prev){
+      x0=w; y0=h; x1=-1; y1=-1;
+      const a = idx[f];
+      for(let y=0;y<h;y++){
+        const row = y*w;
+        for(let x=0;x<w;x++){
+          if(a[row+x] !== prev[row+x]){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+        }
+      }
+      if(x1<0){ // nic se nezměnilo → jen prodluž předchozí snímek
+        if(lastDelayPos>=0){
+          lastCs = Math.min(65535, lastCs+cs);
+          G.at(lastDelayPos, lastCs & 255); G.at(lastDelayPos+1, (lastCs>>8) & 255);
+        }
+        continue;
+      }
+    }
+    const bw = x1-x0+1, bh = y1-y0+1;
+    G.b(0x21); G.b(0xF9); G.b(4); G.b(0x04);
+    lastDelayPos = G.len; lastCs = Math.min(65535,cs); G.w(lastCs); G.b(0); G.b(0);
+    G.b(0x2C); G.w(x0); G.w(y0); G.w(bw); G.w(bh); G.b(0);
+    const sub = new Uint8Array(bw*bh);
+    for(let y=0;y<bh;y++) sub.set(idx[f].subarray((y0+y)*w + x0, (y0+y)*w + x0 + bw), y*bw);
+    G.b(8);
+    const data = lzw(8, sub);
+    for(let p=0;p<data.length;p+=255){
+      const chunk = data.slice(p, p+255);
+      G.b(chunk.length); G.arr(chunk);
+    }
+    G.b(0);
+    prev = idx[f];
+  }
+  G.b(0x3B);
+  return G.out();
+}
+
+function loadImg(url){
+  return new Promise((res,rej)=>{ const i = new Image(); i.onload = ()=>res(i); i.onerror = rej; i.src = url; });
+}
+function svgUrl(outW, outH){
+  const clone = svg.cloneNode(true);
+  clone.removeAttribute("style");
+  clone.setAttribute("xmlns", NS);
+  clone.setAttribute("width", outW); clone.setAttribute("height", outH);
+  const src = new XMLSerializer().serializeToString(clone);
+  return "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(src)));
+}
+function fileName(ext){
+  return (getVal("f_nazev")||"cviceni").replace(/[^\p{L}\p{N} _-]/gu,"").trim().replace(/\s+/g,"-") + ext;
+}
+
+$("btnGif").onclick = async ()=>{
+  if(frames.length<2){ alert("Nejdřív přidej druhou fázi (＋ fáze) a posuň v ní hráče — GIF se dělá z rozdílu mezi fázemi."); return; }
+  if(pending) finishArrow();
+  const prog = $("gifProg"), btn = $("btnGif");
+  btn.disabled = true;
+  try{
+    const seq = timeline();
+    const W0 = +svg.getAttribute("width"), H0 = +svg.getAttribute("height");
+    const outW = +$("gifW").value, outH = Math.round(H0/W0*outW);
+    const cv = document.createElement("canvas"); cv.width = outW; cv.height = outH;
+    const cx = cv.getContext("2d", {willReadFrequently:true});
+    const keyed = [];
+    for(let i=0;i<seq.length;i++){
+      prog.textContent = "renderuju " + (i+1) + "/" + seq.length;
+      await new Promise(r=>setTimeout(r,0));
+      render(seq[i].list);
+      const img = await loadImg(svgUrl(outW, outH));
+      cx.fillStyle = "#fff"; cx.fillRect(0,0,outW,outH);
+      cx.drawImage(img, 0, 0, outW, outH);
+      keyed.push(toKeys(cx.getImageData(0,0,outW,outH).data, outW*outH));
+    }
+    render();
+    prog.textContent = "kóduju GIF…";
+    await new Promise(r=>setTimeout(r,30));
+    const bytes = buildGif(keyed, outW, outH, seq.map(s=>s.ms));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([bytes], {type:"image/gif"}));
+    a.download = fileName(".gif"); a.click();
+    prog.textContent = "hotovo · " + Math.round(bytes.length/1024) + " kB";
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); prog.textContent=""; }, 6000);
+  }catch(err){
+    console.error(err);
+    prog.textContent = "";
+    alert("Export GIFu se nepovedl: " + err);
+    render();
+  }
+  btn.disabled = false;
+};
+
+$("btnExport").onclick = ()=>{
+  const blob = new Blob([JSON.stringify({app:"hokej-cviceni", v:2, data: db()}, null, 1)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "knihovna-cviceni-"+new Date().toISOString().slice(0,10)+".json";
+  a.click();
+};
+$("btnImport").onclick = ()=> $("fileIn").click();
+$("fileIn").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    try{
+      const j = JSON.parse(rd.result);
+      const inc = Array.isArray(j) ? j : j.data;
+      if(!Array.isArray(inc)) throw 0;
+      const a = db(); const ids = new Set(a.map(x=>x.id));
+      let n = 0;
+      inc.forEach(x=>{ if(!ids.has(x.id)){ a.push(x); n++; } });
+      saveDb(a); renderLib();
+      alert("Naimportováno cvičení: "+n);
+    }catch(err){ alert("Soubor se nepodařilo načíst."); }
+    e.target.value = "";
+  };
+  rd.readAsText(f);
+};
+
+/* =========================================================
+   VZOROVÁ CVIČENÍ (jen při prvním spuštění)
+   ========================================================= */
+function seed(){
+  if(db().length) return;
+  const P = (id,x,y,n,c)=>({id,t:"player",x,y,c:c||"#f7e240",n:String(n)});
+  const O = (id,x,y,n)=>({id,t:"player",x,y,c:"#e74c3c",n:String(n)});
+  const C = (id,x,y)=>({id,t:"cone",x,y,c:"#e87d1e"});
+  const B = (id,x,y)=>({id,t:"ball",x,y});
+  const A = (id,t,pts,c)=>({id,t,c:c||"#ffffff",pts});
+  const T = (id,x,y,n,c)=>({id,t:"text",x,y,c:c||"#ffffff",n});
+  // posun objektů do další fáze: mv(fáze, {id:{x,y}}, [id které zmizí], [nové objekty])
+  const mv = (fr, pos, drop, add)=>{
+    const out = fr.filter(o=>!(drop||[]).includes(o.id)).map(o=>{
+      const c = JSON.parse(JSON.stringify(o));
+      if(pos[o.id]) Object.assign(c, pos[o.id]);
+      return c;
+    });
+    return out.concat(JSON.parse(JSON.stringify(add||[])));
+  };
+
+  const data = [
+  {
+    id:"seed1", field:"prazdna",
+    f_nazev:"Přihrávky ve trojicích v pohybu",
+    f_kat:"Technika — přihrávka a zpracování",
+    f_tym:"U15", f_hracu:"9–15", f_cas:"12 min", f_prostor:"40 × 25 m", f_pomucky:"6 kuželů, 3 míče",
+    f_cil:"Přesná přihrávka po zemi do pohybu a zpracování v běhu, hlava nahoře.",
+    f_org:"Trojice na jedné šířce. Kužely vymezují koridor cca 15 m široký. Míč startuje u prostředního.",
+    f_prubeh:"Trojice postupuje vpřed, hráči si přihrávají do pohybu a po přihrávce mění pozici (běží za přihrávkou). Na konci koridoru otočka a zpátky. Po 2 minutách výměna rolí a přidání tempa.",
+    f_klic:"Hůl na zemi před tělem, příjem na forhend do strany · přihrávka před hráče, ne za něj · po přihrávce hned pohyb, nestát · hlava nahoru — dívej se, kam hraješ.",
+    f_var:"1) přidat jeden dotek limit · 2) třetí hráč brání pasivně · 3) soutěž — kolik přihrávek bez chyby na délku hřiště.",
+    frames:[[C("c1",110,110),C("c2",110,515),C("c3",890,110),C("c4",890,515),
+          P("p1",170,180,1),P("p2",170,315,2),P("p3",170,455,3),
+          B("b",186,315),
+          A("a1","pass",[{x:196,y:310},{x:350,y:200}]),
+          A("a2","run",[{x:186,y:335},{x:360,y:430}]),
+          A("a3","dribble",[{x:390,y:190},{x:660,y:170}]),
+          T("t1",640,520,"po přihrávce běž za míčem","#333333")]],
+    ts:Date.now()
+  },
+  {
+    id:"seed2", field:"venek-pulka",
+    f_nazev:"3v2 přechod do zakončení",
+    f_kat:"Herní situace 1v1 – 3v3",
+    f_tym:"U15", f_hracu:"10–16", f_cas:"20 min", f_prostor:"útočná půlka", f_pomucky:"míče, rozlišováky, brankář",
+    f_cil:"Rychlé rozhodování v přesile, využití šířky a zakončení do 3 doteků v kruhu.",
+    f_org:"Tři útočníci startují od 23m čáry, dva obránci brání kruh. Brankář v brance. Zbytek čeká za čárou a rotuje.",
+    f_prubeh:"Trenér nahrává míč prostřednímu útočníkovi, tím se rozjíždí akce. Trojice má 12 sekund na zakončení. Po ztrátě nebo zakončení se okamžitě startuje další trojice. Obránci zůstávají dvě série, pak rotace.",
+    f_klic:"Šířka — krajní hráči k postranní čáře, ne do chumlu · první přihrávka musí být rychlá, dřív než se obrana srovná · do kruhu vstupovat s míčem pod kontrolou · dorážka — vždycky jeden hráč na tyči.",
+    f_var:"1) zkrátit limit na 8 sekund · 2) 3v3 s vracejícím se obráncem · 3) po ztrátě obrana vyváží míč přes 23m = bod pro obranu.",
+    frames: (()=>{
+      const f1 = [P("p7",180,470,7), P("p9",500,540,9), P("p11",820,470,11),
+                  O("o4",370,300,4), O("o5",640,300,5),
+                  P("gk",500,60,"G","#2980b9"), B("b",500,560),
+                  A("a1","pass",[{x:500,y:528},{x:205,y:458}]),
+                  A("a2","run",[{x:830,y:450},{x:710,y:250}]),
+                  A("a3","dribble",[{x:190,y:445},{x:300,y:255}]),
+                  T("t1",700,610,"12 s na zakončení")];
+      const f2 = mv(f1, {p7:{x:230,y:430}, b:{x:246,y:422}, p9:{x:520,y:490}, p11:{x:770,y:390}, o4:{x:380,y:285}, o5:{x:625,y:285}},
+                   ["a1","a2","a3"], [A("a4","dribble",[{x:250,y:408},{x:332,y:272}])]);
+      const f3 = mv(f2, {p7:{x:320,y:250}, b:{x:336,y:243}, p9:{x:545,y:345}, p11:{x:690,y:225}, o4:{x:398,y:228}, o5:{x:600,y:250}, gk:{x:500,y:70}},
+                   ["a4"], [A("a9","shot",[{x:340,y:238},{x:468,y:108}],"#f7e240")]);
+      const f4 = mv(f3, {b:{x:468,y:102}, p11:{x:600,y:148}, p9:{x:560,y:300}, gk:{x:482,y:66}}, ["a9"], []);
+      return [f1,f2,f3,f4];
+    })(),
+    ts:Date.now()
+  },
+  {
+    id:"seed3", field:"venek-ctvrtina",
+    f_nazev:"Útočný trestný roh — základní varianta",
+    f_kat:"Standardky — útočný trestný roh",
+    f_tym:"U15", f_hracu:"6 + brankář", f_cas:"15 min", f_prostor:"kruh", f_pomucky:"10 míčů, chrániče, maska",
+    f_cil:"Nacvičit timing výtahu, zastavení míče a přímé zakončení z první.",
+    f_org:"Podavač na základní čáře 10 m od branky, stopař na vrcholu kruhu, střelec vedle něj, dva dobírači na tyčích, jeden hráč na vyvážení.",
+    f_prubeh:"Na signál podavač vytáhne míč po zemi na vrchol kruhu. Stopař zastaví míč jedním dotekem těsně před sebe, střelec zakončuje flikem nebo drivem. Dobírači nabíhají na tyče na dorážku. Opakujeme sérii 10 pokusů, pak výměna rolí.",
+    f_klic:"Výtah rychlý a přesně na nohu stopaře · stopař zastavuje mimo tělo, míč se nesmí odrazit · střelec startuje až v momentě výtahu, ne dřív · dobírači nabíhají po zastavení, ne dopředu.",
+    f_var:"1) varianta s posunutím míče doleva a střelou z úhlu · 2) falešný výtah a přihrávka na tyč · 3) nácvik proti výběhu — první obránce vybíhá naostro.",
+    frames: (()=>{
+      const g1 = [P("s",500,330,"S"), P("z",568,345,"Z","#ffffff"), P("pod",280,28,"P"),
+                  P("gk",500,42,"G","#2980b9"),
+                  P("d1",400,200,"D1","#ffffff"), P("d2",620,200,"D2","#ffffff"),
+                  B("b",300,36),
+                  A("a1","pass",[{x:305,y:40},{x:487,y:315}]),
+                  A("a2","shot",[{x:566,y:322},{x:522,y:80}],"#f7e240"),
+                  A("a3","run",[{x:395,y:180},{x:440,y:78}]),
+                  A("a4","run",[{x:622,y:180},{x:568,y:78}]),
+                  T("t1",790,520,"série 10 pokusů")];
+      const g2 = mv(g1, {b:{x:492,y:318}, gk:{x:500,y:48}}, ["a1","a3","a4"], []);
+      const g3 = mv(g2, {b:{x:524,y:86}, d1:{x:442,y:88}, d2:{x:566,y:92}, gk:{x:512,y:60}}, ["a2"], []);
+      return [g1,g2,g3];
+    })(),
+    ts:Date.now()
+  }];
+  saveDb(data);
+}
+
+/* ---------- start ---------- */
+seed();
+$("pageSize").onchange();
+const first = db()[0];
+if(first) load(first); else blank();
+renderLib();
+</script>
+</body>
+</html>
