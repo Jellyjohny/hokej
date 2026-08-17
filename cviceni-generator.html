@@ -77,6 +77,47 @@ svg#pitch{max-width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgb
 .abtn:hover{background:#f2f2f2}
 .abtn.dan{color:#c0392b;border-color:#e3bcb6}
 
+/* ---------- mobil ---------- */
+@media (max-width:820px){
+  .topbar{position:static;padding:8px 10px;gap:6px}
+  .topbar h1{width:100%;margin-right:0;font-size:.95em}
+  .wrap{flex-direction:column;align-items:stretch;gap:10px;padding:8px}
+  .lib{width:100%;flex:0 0 auto;position:static}
+  .lib .st{cursor:pointer;display:flex;align-items:center}
+  .lib .st:after{content:"▾";margin-left:auto;font-size:1.1em}
+  .lib.coll .st:after{content:"▸"}
+  .lib.coll .tools,.lib.coll #libList{display:none}
+  .lib input[type=search],.lib select{font-size:16px}
+  #libList{max-height:44vh}
+  .li{font-size:.95em}
+  .card{width:100%}
+  .chead{padding:11px 13px}
+  .chead .nazev{font-size:1.12em}
+  .chip input,.chip select{font-size:16px}
+  .chip input.w1{width:38px}.chip input.w2{width:62px}
+  .chip{max-width:100%}
+  .chips .chip:first-child{width:100%}
+  .chip select{flex:1;min-width:0;max-width:100%}
+  .toolbar select,.phases select{max-width:100%}
+  .grid2{grid-template-columns:1fr}
+  .grid2>div{border-right:none;border-bottom:1px solid #eee}
+  .grid2>div:last-child{border-bottom:none}
+  .toolbar{padding:8px 10px 6px;gap:4px}
+  .tbtn{padding:6px 9px;font-size:.75em}
+  .cbtn{width:26px;height:26px}
+  .phases{padding:8px 10px}
+  .fieldbox{padding:0 8px 12px}
+  .st{padding:6px 12px}
+  .body{padding:10px 12px}
+  .hint{padding:0 12px 10px}
+  [contenteditable]{font-size:16px}
+}
+@media (max-width:560px){
+  .btxt{display:none}
+  .tb{padding:6px 10px;font-size:.95em}
+  .chip input.w3{width:88px}.chip input.w4{width:124px}
+}
+
 /* ---------- tisk ---------- */
 @media print{
   .noprint,.topbar,.lib,.toolbar,.hint{display:none!important}
@@ -103,16 +144,16 @@ svg#pitch{max-width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgb
 
 <div class="topbar">
   <h1>🏑 Generátor cvičení <small>pozemní hokej</small></h1>
-  <button class="tb" id="btnNew">＋ Nové</button>
-  <button class="tb prim" id="btnSave">💾 Uložit</button>
+  <button class="tb" id="btnNew" title="Nové cvičení">＋<span class="btxt"> Nové</span></button>
+  <button class="tb prim" id="btnSave" title="Uložit">💾<span class="btxt"> Uložit</span></button>
   <select class="tb" id="pageSize" title="Formát tisku">
     <option value="A4">A4</option>
     <option value="A5">A5</option>
   </select>
-  <button class="tb" id="btnPrint">🖨 PDF / tisk</button>
-  <button class="tb" id="btnPng">🖼 PNG nákresu</button>
-  <button class="tb" id="btnExport">⬇ Export knihovny</button>
-  <button class="tb" id="btnImport">⬆ Import</button>
+  <button class="tb" id="btnPrint" title="PDF / tisk">🖨<span class="btxt"> PDF / tisk</span></button>
+  <button class="tb" id="btnPng" title="PNG nákresu">🖼<span class="btxt"> PNG nákresu</span></button>
+  <button class="tb" id="btnExport" title="Export knihovny">⬇<span class="btxt"> Export knihovny</span></button>
+  <button class="tb" id="btnImport" title="Import">⬆<span class="btxt"> Import</span></button>
   <input type="file" id="fileIn" accept=".json,application/json" style="display:none">
 </div>
 
@@ -155,6 +196,7 @@ svg#pitch{max-width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgb
       <button class="tbtn" data-tool="dribble">∿ Vedení</button>
       <button class="tbtn" data-tool="pass">⇢ Přihrávka</button>
       <button class="tbtn" data-tool="shot">⇒ Střela</button>
+      <button class="tbtn on" id="btnArrowDone" style="display:none">✓ Ukončit šipku</button>
       <div class="sep"></div>
       <button class="tbtn" data-tool="zone">▭ Zóna</button>
       <button class="tbtn" data-tool="pen">✏️ Tužka</button>
@@ -192,7 +234,7 @@ svg#pitch{max-width:100%;height:auto;border-radius:6px;box-shadow:0 2px 10px rgb
     </div>
 
     <div class="fieldbox"><svg id="pitch"></svg></div>
-    <div class="hint noprint">Objekty: klikni na hřiště · Šipky: klikej body trasy, ukonči dvojklikem nebo Enter · Posun: táhni objekt · Guma: klikni na objekt · Dvojklik na hráče = číslo
+    <div class="hint noprint">Objekty: klikni na hřiště · Šipky: klikej body trasy, ukonči dvojklikem, Enterem nebo tlačítkem „✓ Ukončit šipku“ · Posun: táhni objekt · Guma: klikni na objekt · Dvojklik (na mobilu dvojí ťuknutí) na hráče = číslo
       <details style="margin-top:6px"><summary style="cursor:pointer">Jak to funguje (klikni)</summary>
       <div style="text-align:left;max-width:640px;margin:8px auto;line-height:1.7">
         <b>1. Podklad</b> — vyber hřiště v rozbalovátku vlevo (venek celé/půlka/čtvrtina, hala, prázdná plocha, tělocvična).<br>
@@ -473,6 +515,8 @@ function render(list){
     <g pointer-events="none">${f.draw(m,W,H)}</g>
     ${L.map(drawObj).join("")}
     <g pointer-events="none">${prev}</g>`;
+
+  $("btnArrowDone").style.display = pending ? "" : "none";
 }
 
 /* =========================================================
@@ -488,9 +532,18 @@ function hitIndex(e){
   return g ? +g.dataset.i : -1;
 }
 
+let tapT = 0, tapP = null;
 svg.addEventListener("pointerdown", e=>{
   e.preventDefault();
   const p = pt(e), i = hitIndex(e);
+
+  if(e.pointerType==="touch"){
+    // na dotyku prohlížeč dvojklik spolehlivě neposílá → hlídáme dvojí ťuknutí sami
+    if(tapP && e.timeStamp-tapT<350 && Math.abs(p.x-tapP.x)<40 && Math.abs(p.y-tapP.y)<40){
+      tapT = 0; tapP = null; dblAt(e); return;
+    }
+    tapT = e.timeStamp; tapP = p;
+  }
 
   if(tool==="eraser"){ if(i>=0){ snap(); delAt(i); render(); } return; }
 
@@ -557,19 +610,21 @@ svg.addEventListener("pointerup", e=>{
   }
 });
 
-svg.addEventListener("dblclick", e=>{
+function dblAt(e){
   const i = hitIndex(e);
   if(pending){ finishArrow(); return; }
   if(i>=0 && (objs[i].t==="player" || objs[i].t==="text")){
     const s = prompt(objs[i].t==="player"?"Číslo / označení hráče:":"Text:", objs[i].n||"");
     if(s!==null){ snap(); setLabel(i,s); render(); }
   }
-});
+}
+svg.addEventListener("dblclick", dblAt);
 
 function finishArrow(){
   if(pending && pending.pts.length>=2){ snap(); addObj({t:pending.t, c:pending.c, pts:pending.pts}); }
   pending=null; render();
 }
+$("btnArrowDone").onclick = finishArrow;
 
 document.addEventListener("keydown", e=>{
   const inField = /INPUT|SELECT/.test(e.target.tagName) || e.target.isContentEditable;
@@ -734,9 +789,14 @@ $("btnSave").onclick = ()=>{
   const a = db(); const i = a.findIndex(x=>x.id===c.id);
   if(i>=0) a[i]=c; else a.push(c);
   saveDb(a); curId = c.id; renderLib();
-  const b=$("btnSave"); const t=b.textContent; b.textContent="✓ Uloženo"; setTimeout(()=>b.textContent=t, 1200);
+  const b=$("btnSave"); const t=b.innerHTML; b.textContent="✓ Uloženo"; setTimeout(()=>b.innerHTML=t, 1200);
 };
 $("btnNew").onclick = ()=>{ if(confirm("Založit nové cvičení? Neuložené změny zmizí.")) blank(); };
+
+const lib = document.querySelector(".lib");
+const narrow = ()=> window.innerWidth<=820;
+lib.querySelector(".st").onclick = ()=> lib.classList.toggle("coll");
+if(narrow()) lib.classList.add("coll");
 
 function renderLib(){
   const q = $("q").value.toLowerCase(), cat = fcat.value;
@@ -756,7 +816,7 @@ function renderLib(){
         if(confirm("Smazat cvičení z knihovny?")){ saveDb(db().filter(y=>y.id!==ev.target.dataset.del)); if(curId===ev.target.dataset.del) curId=null; renderLib(); }
         return;
       }
-      const o = db().find(y=>y.id===d.dataset.id); if(o) load(o);
+      const o = db().find(y=>y.id===d.dataset.id); if(o){ load(o); if(narrow()) lib.classList.add("coll"); }
     };
   });
 }
